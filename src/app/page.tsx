@@ -9,7 +9,7 @@ export default function Home() {
 
         {/* Header */}
         <header className="w-full flex justify-between items-center pb-12 border-b border-gray-300">
-          <h1 className="text-3xl font-bold text-blue-600">TechBox 📦</h1>
+          <h1 className="text-3xl font-bold text-blue-600">TechBox </h1>
 
           <nav className="flex space-x-6">
             <Link href="/" className="font-semibold text-gray-900 hover:text-blue-600">
@@ -41,7 +41,7 @@ export default function Home() {
               href="/productos"
               className="flex h-12 items-center justify-center gap-2 rounded-full bg-blue-600 px-6 text-white font-medium hover:bg-blue-700 transition-colors"
             >
-              <FaLaptop /> Ver Catálogo Dinámico
+              <FaLaptop /> Ver Catálogo
             </Link>
             <Link
               href="#mision"
@@ -61,7 +61,7 @@ export default function Home() {
             {/* Pilar 1 */}
             <div className="p-6 bg-white rounded-lg shadow-md border border-gray-200">
               <FaLaptop className="text-5xl text-blue-600 mx-auto mb-4" />
-              <h4 className="text-xl font-semibold mb-2">Catálogo Dinámico</h4>
+              <h4 className="text-xl font-semibold mb-2">Catálogo</h4>
               <p className="text-gray-600">
                 Los productos se cargan directamente desde la tabla "Producto" en Supabase.
               </p>
