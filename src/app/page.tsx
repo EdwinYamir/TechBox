@@ -90,7 +90,7 @@ export default function Home() {
         {/* Footer */}
         <footer className="w-full text-center mt-20 pt-8 border-t border-gray-300">
           <p className="text-sm text-gray-500">
-            Proyecto Semestral - Integración Next.js & Supabase (PostgreSQL).
+            TechBox - Todos los derechos reservados.
           </p>
         </footer>
 
