@@ -22,19 +22,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
     stock,
     onClick,
 }) => {
-    const isOutOfStock = stock === 0;
+    const isOutOfStock = stock <= 0;
     const isLowStock = stock > 0 && stock < 5;
 
     return (
         <article
-            onClick={onClick}
-            className="
-                group relative bg-white rounded-2xl overflow-hidden
+            onClick={!isOutOfStock ? onClick : undefined}
+            className={`
+                ${!isOutOfStock ? "group" : ""} relative bg-white rounded-2xl overflow-hidden
                 border border-slate-100 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)]
                 transition-all duration-300 ease-out
-                hover:shadow-[0_12px_24px_-8px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:border-blue-100
-                cursor-pointer flex flex-col h-full
-            "
+                flex flex-col h-full
+                ${!isOutOfStock
+                    ? "hover:shadow-[0_12px_24px_-8px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:border-blue-100 cursor-pointer"
+                    : "opacity-80 cursor-not-allowed"}
+            `}
         >
             {/* Top Hover Gradient Line */}
             <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
