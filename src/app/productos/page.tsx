@@ -27,7 +27,7 @@ export default function ProductosPage() {
         Inventario (Cantidad)
       `);
 
-            console.log("DATA SUPABASE:", data);  // ← AQUÍ
+            console.log("DATA SUPABASE:", data);
 
             if (error) {
                 console.error("Error cargando productos:", error);
@@ -69,7 +69,7 @@ export default function ProductosPage() {
                         modelo={p.Modelo}
                         categoria={p.Categoria}
                         precio={p.PrecioVenta}
-                        stock={p.Inventario?.Cantidad ?? 0}  // ← FUNCIONA CON TU TABLA REAL
+                        stock={p.Inventario?.Cantidad ?? 0}
                         onClick={() => console.log("Producto:", p.Nombre)}
                     />
                 ))}
