@@ -1,23 +1,25 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { X, ShoppingBag, CheckCircle, AlertCircle } from "lucide-react";
+import { X, ShoppingBag, CheckCircle, AlertCircle, Plus, Minus } from "lucide-react";
 
 interface PurchaseModalProps {
     isOpen: boolean;
     onClose: () => void;
     product: any;
-    onBuy: (product: any) => Promise<void>;
+    onBuy: (product: any, quantity: number) => Promise<void>;
 }
 
 export default function PurchaseModal({ isOpen, onClose, product, onBuy }: PurchaseModalProps) {
     const [isBuying, setIsBuying] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [quantity, setQuantity] = useState(1);
 
     useEffect(() => {
         if (isOpen) {
             setSuccess(false);
             setIsBuying(false);
+            setQuantity(1);
         }
     }, [isOpen]);
 
@@ -30,7 +32,7 @@ export default function PurchaseModal({ isOpen, onClose, product, onBuy }: Purch
     const handleBuyClick = async () => {
         setIsBuying(true);
         try {
-            await onBuy(product);
+            await onBuy(product, quantity);
             setSuccess(true);
             setTimeout(() => {
                 onClose();
@@ -56,7 +58,9 @@ export default function PurchaseModal({ isOpen, onClose, product, onBuy }: Purch
 
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-white hover:bg-white/20 p-2 rounded-full transition-colors"
+                    type="button"
+                    className="absolute top-4 right-4 z-20 text-white hover:bg-white/20 p-2 rounded-full transition-colors"
+                    aria-label="Cerrar modal"
                 >
                     <X size={20} />
                 </button>
@@ -69,9 +73,9 @@ export default function PurchaseModal({ isOpen, onClose, product, onBuy }: Purch
                     <h2 className="text-2xl font-bold text-gray-900 mb-1">{product.Nombre}</h2>
                     <p className="text-gray-500 text-sm mb-6">{product.Marca} • {product.Modelo}</p>
 
-                    <div className="w-full bg-gray-50 rounded-xl p-4 mb-6 border border-gray-100 flex justify-between items-center">
+                    <div className="w-full bg-gray-50 rounded-xl p-4 mb-4 border border-gray-100 flex justify-between items-center">
                         <div className="text-left">
-                            <p className="text-xs uppercase text-gray-400 font-bold tracking-wider">Precio</p>
+                            <p className="text-xs uppercase text-gray-400 font-bold tracking-wider">Precio Unit.</p>
                             <p className="text-2xl font-bold text-gray-900">${product.PrecioVenta}</p>
                         </div>
                         <div className="text-right">
@@ -81,6 +85,39 @@ export default function PurchaseModal({ isOpen, onClose, product, onBuy }: Purch
                             </p>
                         </div>
                     </div>
+
+                    {stock > 0 && (
+                        <div className="w-full flex items-center justify-between mb-6 px-1">
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm text-gray-500 font-medium">Cantidad:</span>
+                                <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                                    <button
+                                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                                        className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                        disabled={quantity <= 1 || isBuying}
+                                        type="button"
+                                    >
+                                        <Minus size={16} />
+                                    </button>
+                                    <span className="w-10 text-center font-bold text-gray-900">{quantity}</span>
+                                    <button
+                                        onClick={() => setQuantity((q) => Math.min(stock, q + 1))}
+                                        className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                        disabled={quantity >= stock || isBuying}
+                                        type="button"
+                                    >
+                                        <Plus size={16} />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-xs uppercase text-gray-400 font-bold tracking-wider">Total</p>
+                                <p className="text-2xl font-bold text-blue-600">
+                                    ${(product.PrecioVenta * quantity).toFixed(2)}
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     {success ? (
                         <div className="w-full bg-green-50 text-green-700 py-3 rounded-xl flex items-center justify-center gap-2 font-medium animate-pulse">

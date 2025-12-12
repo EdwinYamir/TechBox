@@ -43,7 +43,7 @@ export default function ProductosPage() {
         fetchProductos();
     }, []);
 
-    const handleBuy = async (product: any) => {
+    const handleBuy = async (product: any, quantity: number) => {
         if (!product) return;
 
         // 1. Get current stock
@@ -51,18 +51,10 @@ export default function ProductosPage() {
             ? product.Inventario[0]?.Cantidad
             : product.Inventario?.Cantidad;
 
-        if (currentStock <= 0) return;
+        if (currentStock < quantity) return;
 
-        const newStock = currentStock - 1;
+        const newStock = currentStock - quantity;
 
-        // 2. Optimistic UI Update (optional, but good for UX)
-        // We'll update the state after success to be safe, or optimistic. 
-        // Let's do optimistic for "wow" factor, but revert if fail? 
-        // Usually simpler to just wait unless slow. The modal shows a loading spinner.
-        // We will update the local state so the modal and the card reflect the new stock.
-
-        // 3. Update Supabase
-        // We assume 'Inventario' table has a column 'IdProducto' or we can find the row by IdProducto.
         const { error } = await supabase
             .from("Inventario")
             .update({ Cantidad: newStock })
@@ -71,21 +63,18 @@ export default function ProductosPage() {
         if (error) {
             console.error("Error updating stock:", error);
             alert("Hubo un error al realizar la compra.");
-            throw error; // Let modal handle exception
+            throw error;
         }
 
-        // 4. Update local state
         setProductos((prev) =>
             prev.map((p) => {
                 if (p.IdProducto === product.IdProducto) {
-                    // Update the simple or array structure
                     const newInventario = Array.isArray(p.Inventario)
                         ? [{ ...p.Inventario[0], Cantidad: newStock }]
                         : { ...p.Inventario, Cantidad: newStock };
 
                     const updatedProduct = { ...p, Inventario: newInventario };
 
-                    // Also update selectedProduct so modal updates in real-time
                     setSelectedProduct(updatedProduct);
 
                     return updatedProduct;
