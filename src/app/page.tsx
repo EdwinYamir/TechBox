@@ -33,7 +33,7 @@ export default function Home() {
             Tecnología y Servicio al Instante
           </h2>
           <p className="max-w-3xl mt-4 text-xl text-gray-600">
-            TechBox es tu fuente confiable para Laptops, Componentes y Accesorios. Nuestro sistema de gestión se basa en una robusta base de datos PostgreSQL administrada por Supabase.
+            TechBox es tu fuente confiable para Laptops, Componentes y Accesorios.
           </p>
 
           <div className="mt-10 flex gap-4">
