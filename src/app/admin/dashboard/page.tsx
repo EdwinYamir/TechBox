@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 // Nuevo componente
-import AdminCard from "@/src/components/AdminCard";
+import AdminCard from "@/components/AdminCard";
 
 // Iconos modernos
 import { Package, Boxes, DollarSign, Wrench } from "lucide-react";

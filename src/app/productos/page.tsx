@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ProductCard from "@/src/components/ProductCard"; // Ajusta la ruta si es diferente
+import ProductCard from "@/components/ProductCard"; // Ajusta la ruta si es diferente
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
