@@ -20,7 +20,6 @@ export default function Home() {
     if (!containerRef.current) return;
 
     const ctx = gsap.context(() => {
-      // Timeline for Hero
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
       tl.fromTo(".hero-text-1",
@@ -38,7 +37,6 @@ export default function Home() {
           "-=0.4"
         );
 
-      // Floating Animation for background elements
       gsap.to(".floating-shape", {
         y: -30,
         rotation: 10,
