@@ -2,22 +2,67 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import {
+    Package,
+    Boxes,
+    DollarSign,
+    Wrench,
+    Users,
+    BarChart2,
+    ArrowLeft,
+    TrendingUp,
+    AlertTriangle,
+    ChevronRight,
+    Search
+} from "lucide-react";
 
-// Tarjetas existentes
-import AdminCard from "@/components/AdminCard";
-
-// Iconos
-import { Package, Boxes, DollarSign, Wrench, Users, BarChart2 } from "lucide-react";
-
+// Supabase config
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+// Componente de Tarjeta de Estadísticas (Local para estilos personalizados)
+const StatCard = ({ title, value, icon: Icon, color, onClick, subtext }: any) => {
+    // Definir temas de color con Tailwind
+    const colorClasses: Record<string, string> = {
+        blue: "bg-blue-50 text-blue-600 ring-blue-100",
+        green: "bg-emerald-50 text-emerald-600 ring-emerald-100",
+        yellow: "bg-amber-50 text-amber-600 ring-amber-100",
+        red: "bg-rose-50 text-rose-600 ring-rose-100",
+        purple: "bg-violet-50 text-violet-600 ring-violet-100",
+        pink: "bg-pink-50 text-pink-600 ring-pink-100",
+    };
+
+    const theme = colorClasses[color] || colorClasses.blue;
+
+    return (
+        <div
+            onClick={onClick}
+            className={`
+                relative bg-white p-6 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] 
+                hover:shadow-[0_8px_30px_-4px_rgba(6,81,237,0.1)] transition-all duration-300 group
+                ${onClick ? 'cursor-pointer hover:scale-[1.02] active:scale-[0.98]' : ''}
+            `}
+        >
+            <div className="flex items-start justify-between">
+                <div>
+                    <p className="text-slate-500 text-sm font-medium mb-1">{title}</p>
+                    <h3 className="text-3xl font-bold text-slate-800 tracking-tight">{value}</h3>
+                    {subtext && <p className="text-xs text-slate-400 mt-2">{subtext}</p>}
+                </div>
+                <div className={`p-3 rounded-xl ${theme} ring-1 group-hover:ring-2 transition-all`}>
+                    <Icon size={24} />
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
 
-    // Módulos actuales
+    // Módulos de datos
     const [totalProductos, setTotalProductos] = useState(0);
     const [totalStock, setTotalStock] = useState(0);
     const [totalVentas, setTotalVentas] = useState(0);
@@ -32,40 +77,45 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         const fetchData = async () => {
-            // Total productos (conteo)
+            // 1. Total productos
             const { count: countProductos } = await supabase
                 .from("Producto")
                 .select("*", { count: "exact", head: true });
+
             setTotalProductos(countProductos || 0);
 
-            // Total Stock (sumar cantidades de Inventario)
+            // 2. Total Stock
             const { data: inventarioStock } = await supabase
                 .from("Inventario")
                 .select("Cantidad");
+
             setTotalStock(inventarioStock?.reduce((acc, i) => acc + Number(i.Cantidad), 0) || 0);
 
-            // Total Ventas Dinero
+            // 3. Total Ventas ($)
             const { data: ventas } = await supabase
                 .from("Venta")
                 .select("TotalVenta");
+
             setTotalVentas(ventas?.reduce((acc, v) => acc + Number(v.TotalVenta), 0) || 0);
 
-            // Servicios pendientes
+            // 4. Servicios pendientes
             const { count: countServicios } = await supabase
                 .from("ServicioTecnico")
                 .select("*", { count: "exact" })
                 .eq("Estado", "Ingresado");
+
             setServiciosPendientes(countServicios || 0);
 
-            // Ventas recientes (últimas 5)
+            // 5. Ventas recientes (últimas 5)
             const { data: ventas_r } = await supabase
                 .from("Venta")
                 .select("IdVenta, FechaVenta, TotalVenta")
                 .order("FechaVenta", { ascending: false })
                 .limit(5);
+
             setVentasRecientes(ventas_r || []);
 
-            // Stock bajo (Inventario < 5) - trae Producto (array)
+            // 6. Stock bajo (< 5)
             const { data: productosStock } = await supabase
                 .from("Inventario")
                 .select(`
@@ -77,11 +127,10 @@ export default function AdminDashboard() {
                     )
                 `)
                 .lt("Cantidad", 5);
+
             setStockBajo(productosStock || []);
 
-            // -----------------------------------------
-            // 🚀 NUEVO MÓDULO 1 — TOP 3 CLIENTES
-            // -----------------------------------------
+            // 7. Top Clientes
             const { data: topClientesData } = await supabase
                 .from("Venta")
                 .select(`
@@ -93,9 +142,8 @@ export default function AdminDashboard() {
                 `);
 
             const clientesSummed: Record<string, number> = {};
-
             topClientesData?.forEach((v: any) => {
-                const key = `${v.Cliente?.Nombre ?? "SinNombre"} ${v.Cliente?.Apellido ?? ""}`.trim();
+                const key = `${v.Cliente?.Nombre ?? "Cliente"} ${v.Cliente?.Apellido ?? ""}`.trim();
                 clientesSummed[key] = (clientesSummed[key] || 0) + Number(v.TotalVenta);
             });
 
@@ -106,9 +154,7 @@ export default function AdminDashboard() {
 
             setTopClientes(top3);
 
-            // -----------------------------------------
-            // 🚀 NUEVO MÓDULO 2 — VENTAS POR EMPLEADO
-            // -----------------------------------------
+            // 8. Ventas por Empleado
             const { data: ventasEmpleado } = await supabase
                 .from("Venta")
                 .select(`
@@ -120,9 +166,8 @@ export default function AdminDashboard() {
                 `);
 
             const empleadoSum: Record<string, number> = {};
-
             ventasEmpleado?.forEach((v: any) => {
-                const key = `${v.Empleado?.Nombre ?? "SinNombre"} ${v.Empleado?.Apellidos ?? ""}`.trim();
+                const key = `${v.Empleado?.Nombre ?? "Desconocido"} ${v.Empleado?.Apellidos ?? ""}`.trim();
                 empleadoSum[key] = (empleadoSum[key] || 0) + Number(v.TotalVenta);
             });
 
@@ -132,9 +177,7 @@ export default function AdminDashboard() {
 
             setVentasPorEmpleado(empleadosOrdenados);
 
-            // -----------------------------------------
-            // 🚀 NUEVO MÓDULO 3 — VALOR TOTAL INVENTARIO
-            // -----------------------------------------
+            // 9. Valor Inventario
             const { data: inventarioCompleto } = await supabase
                 .from("Inventario")
                 .select(`
@@ -146,14 +189,12 @@ export default function AdminDashboard() {
                     )
                 `);
 
-            // CORRECCIÓN: Producto viene como ARRAY -> usar [0]
-            const totalValor =
-                inventarioCompleto?.reduce((acc: number, item: any) => {
-                    const prod = Array.isArray(item.Producto) ? item.Producto[0] : item.Producto;
-                    const precio = Number(prod?.PrecioCosto || 0);
-                    const cantidad = Number(item.Cantidad || 0);
-                    return acc + cantidad * precio;
-                }, 0) || 0;
+            const totalValor = inventarioCompleto?.reduce((acc: number, item: any) => {
+                const prod = Array.isArray(item.Producto) ? item.Producto[0] : item.Producto;
+                const precio = Number(prod?.PrecioCosto || 0);
+                const cantidad = Number(item.Cantidad || 0);
+                return acc + cantidad * precio;
+            }, 0) || 0;
 
             setValorInventario(totalValor);
             setInventario(inventarioCompleto || []);
@@ -166,130 +207,261 @@ export default function AdminDashboard() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center text-xl text-gray-600">
-                Cargando dashboard...
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-slate-500 font-medium">Cargando métricas...</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 p-8">
+        <div className="min-h-screen bg-slate-50/50 p-6 md:p-12 font-sans text-slate-900">
 
-            {/* Botón Atrás */}
-            <button
-                onClick={() => window.history.back()}
-                className="mb-6 flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-700 font-medium transition"
-            >
-                ← Atrás
-            </button>
+            <div className="max-w-7xl mx-auto space-y-10">
 
-            <h1 className="text-4xl font-bold text-gray-800 mb-10">
-                Dashboard Administrativo
-            </h1>
-
-            {/* TARJETAS SUPERIORES */}
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-14">
-                <AdminCard title="Productos" value={totalProductos} icon={<Package size={32} />} color="blue" />
-                <AdminCard
-                    title="Stock total"
-                    value={totalStock}
-                    color="green"
-                    icon={<Boxes size={32} />}
-                    onClick={() => setVerStockTodos(true)}
-                />
-                <AdminCard title="Ventas totales ($)" value={totalVentas.toFixed(2)} icon={<DollarSign size={32} />} color="yellow" />
-                <AdminCard title="Servicios pendientes" value={serviciosPendientes} icon={<Wrench size={32} />} color="red" />
-                <AdminCard title="Valor inventario ($)" value={valorInventario.toFixed(2)} icon={<BarChart2 size={32} />} color="purple" />
-                <AdminCard title="Top clientes" value={topClientes.length} icon={<Users size={32} />} color="pink" />
-            </div>
-
-            {/* CONTENIDO PRINCIPAL */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-
-                {/* VENTAS POR EMPLEADO */}
-                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                    <h2 className="text-2xl font-semibold mb-4">Ventas por empleado</h2>
-
-                    {ventasPorEmpleado.length === 0 && <p className="text-gray-600">No hay datos.</p>}
-                    {ventasPorEmpleado.map((e, idx) => (
-                        <div key={idx} className="flex justify-between py-3 border-b">
-                            <span>{e.empleado}</span>
-                            <span className="font-bold text-gray-800">${e.total.toFixed(2)}</span>
+                {/* Header */}
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 w-full md:w-auto">
+                        <button
+                            onClick={() => window.history.back()}
+                            className="p-3 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-600 transition shadow-sm group"
+                        >
+                            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                        </button>
+                        <div>
+                            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Dashboard General</h1>
+                            <p className="text-slate-500">Resumen administrativo y métricas clave.</p>
                         </div>
-                    ))}
-
-                    <div className="mt-4 text-sm text-gray-500">Actualizado con los totales por empleado.</div>
-                </div>
-
-                {/* TOP 3 CLIENTES */}
-                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                    <h2 className="text-2xl font-semibold mb-4">Top 3 Clientes</h2>
-
-                    {topClientes.length === 0 && <p className="text-gray-600">No hay clientes con ventas.</p>}
-                    {topClientes.map((c, idx) => (
-                        <div key={idx} className="flex justify-between py-3 border-b">
-                            <span>#{idx + 1} {c.cliente}</span>
-                            <span className="font-bold text-gray-800">${c.total.toFixed(2)}</span>
-                        </div>
-                    ))}
-
-                    <div className="mt-4 text-sm text-gray-500">Top clientes por monto gastado.</div>
-                </div>
-
-                {/* VENTAS RECIENTES */}
-                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 md:col-span-2">
-                    <h2 className="text-2xl font-semibold mb-4">Ventas recientes</h2>
-
-                    {ventasRecientes.length === 0 && <p className="text-gray-600">No hay ventas registradas.</p>}
-                    {ventasRecientes.map((v) => (
-                        <div key={v.IdVenta} className="flex justify-between py-3 border-b">
-                            <span className="text-sm text-gray-600">{new Date(v.FechaVenta).toLocaleString()}</span>
-                            <span className="font-bold text-gray-800">${Number(v.TotalVenta).toFixed(2)}</span>
-                        </div>
-                    ))}
-                </div>
-
-                {/* STOCK BAJO */}
-                <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 md:col-span-2">
-                    <h2 className="text-2xl font-semibold mb-4">Productos con stock bajo</h2>
-
-                    {stockBajo.length === 0 && <p className="text-gray-600">Todos los productos tienen stock suficiente.</p>}
-                    {stockBajo.map((item: any, i: number) => {
-                        const prod = Array.isArray(item.Producto) ? item.Producto[0] : item.Producto;
-                        return (
-                            <div key={i} className="flex justify-between py-3 border-b">
-                                <span>
-                                    {prod?.Nombre ?? "Producto desconocido"} {prod?.Marca ? `(${prod?.Marca})` : ""}
-                                </span>
-                                <span className="text-red-600 font-bold">{Number(item.Cantidad)} unidades</span>
-                            </div>
-                        );
-                    })}
-
-                    <div className="mt-3 text-sm text-gray-500">Productos con cantidad menor a 5.</div>
-                </div>
-
-                {/* INVENTARIO COMPLETO */}
-                {verStockTodos && (
-                    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 mt-10">
-                        <h2 className="text-2xl font-semibold mb-4">Inventario completo</h2>
-
-                        {inventario?.map((item, i) => {
-                            const prod = Array.isArray(item.Producto) ? item.Producto[0] : item.Producto;
-                            return (
-                                <div key={i} className="flex justify-between py-3 border-b">
-                                    <span>
-                                        {prod?.Nombre ?? "Producto desconocido"}{" "}
-                                        ({prod?.Marca ?? "Sin marca"})
-                                    </span>
-                                    <span className="font-bold">{item.Cantidad} unidades</span>
-                                </div>
-                            );
-                        })}
                     </div>
-                )}
+                </div>
 
+                {/* KPIs Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+                    <StatCard
+                        title="Productos"
+                        value={totalProductos}
+                        icon={Package}
+                        color="blue"
+                    />
+                    <StatCard
+                        title="Stock Total"
+                        value={totalStock}
+                        icon={Boxes}
+                        color="green"
+                        subtext="Click para ver inventario"
+                        onClick={() => setVerStockTodos(!verStockTodos)}
+                    />
+                    <StatCard
+                        title="Ingresos"
+                        value={`$${totalVentas.toLocaleString()}`}
+                        icon={DollarSign}
+                        color="yellow"
+                    />
+                    <StatCard
+                        title="Servicios"
+                        value={serviciosPendientes}
+                        icon={Wrench}
+                        color="red"
+                        subtext="Pendientes"
+                    />
+                    <StatCard
+                        title="Valor Inventario"
+                        value={`$${valorInventario.toLocaleString()}`}
+                        icon={BarChart2}
+                        color="purple"
+                    />
+                    <StatCard
+                        title="Top Clientes"
+                        value={topClientes.length}
+                        icon={Users}
+                        color="pink"
+                    />
+                </div>
 
+                {/* Main Content Grid */}
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
+
+                    {/* Left Column (2/3) */}
+                    <div className="xl:col-span-2 space-y-8">
+
+                        {/* Ventas Recientes */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                            <div className="p-6 border-b border-slate-50 bg-slate-50/30 flex justify-between items-center">
+                                <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                                    <TrendingUp size={20} className="text-blue-600" />
+                                    Ventas Recientes
+                                </h3>
+                                <span className="text-xs font-semibold px-3 py-1 bg-blue-100 text-blue-700 rounded-full">En tiempo real</span>
+                            </div>
+                            <div className="p-0">
+                                {ventasRecientes.length === 0 ? (
+                                    <p className="p-6 text-slate-500 text-center">No hay ventas registradas aún.</p>
+                                ) : (
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="text-xs uppercase text-slate-400 bg-slate-50 border-b border-slate-100">
+                                                <th className="px-6 py-4 font-semibold">ID Venta</th>
+                                                <th className="px-6 py-4 font-semibold">Fecha</th>
+                                                <th className="px-6 py-4 font-semibold text-right">Monto</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {ventasRecientes.map((v) => (
+                                                <tr key={v.IdVenta} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                                                    <td className="px-6 py-4 font-medium text-slate-700">#{v.IdVenta}</td>
+                                                    <td className="px-6 py-4 text-slate-500 text-sm">
+                                                        {new Date(v.FechaVenta).toLocaleString()}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right font-bold text-slate-800">
+                                                        ${Number(v.TotalVenta).toFixed(2)}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Inventario Completo (Condicional) */}
+                        {verStockTodos && (
+                            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
+                                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
+                                    <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                                        <Boxes size={20} className="text-green-600" />
+                                        Inventario Detallado
+                                    </h3>
+                                    {/* Placeholder para filtro futuro */}
+                                    <div className="relative hidden md:block">
+                                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                        <input
+                                            type="text"
+                                            placeholder="Buscar producto..."
+                                            className="pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                                            readOnly // Para esta demo
+                                        />
+                                    </div>
+                                </div>
+                                <div className="max-h-[500px] overflow-y-auto">
+                                    <table className="w-full text-left">
+                                        <thead className="sticky top-0 bg-white shadow-sm z-10">
+                                            <tr className="text-xs uppercase text-slate-400 border-b border-slate-100">
+                                                <th className="px-6 py-3 font-semibold">Producto</th>
+                                                <th className="px-6 py-3 font-semibold">Marca</th>
+                                                <th className="px-6 py-3 font-semibold text-right">Stock</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50">
+                                            {inventario.map((item, i) => {
+                                                const prod = Array.isArray(item.Producto) ? item.Producto[0] : item.Producto;
+                                                return (
+                                                    <tr key={i} className="hover:bg-slate-50 transition-colors">
+                                                        <td className="px-6 py-3 font-medium text-slate-700">{prod?.Nombre ?? "Sin nombre"}</td>
+                                                        <td className="px-6 py-3 text-slate-500 text-sm">{prod?.Marca ?? "-"}</td>
+                                                        <td className="px-6 py-3 text-right">
+                                                            <span className={`px-2 py-1 rounded-md text-xs font-bold ${item.Cantidad < 5 ? 'bg-red-50 text-red-600 ring-1 ring-red-100' : 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100'}`}>
+                                                                {item.Cantidad} u.
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right Column (1/3) */}
+                    <div className="space-y-8">
+
+                        {/* Top Clientes Widget */}
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                            <h3 className="font-bold text-lg text-slate-800 mb-6 flex items-center gap-2">
+                                <Users size={20} className="text-pink-500" />
+                                Top Clientes
+                            </h3>
+                            <div className="space-y-6">
+                                {topClientes.map((c, idx) => (
+                                    <div key={idx} className="flex items-center gap-4">
+                                        <div className={`
+                                            w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow-md
+                                            ${idx === 0 ? 'bg-amber-400 shadow-amber-200' : idx === 1 ? 'bg-slate-300' : 'bg-orange-300'}
+                                        `}>
+                                            {idx + 1}
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="font-semibold text-slate-800 leading-tight">{c.cliente}</p>
+                                            <div className="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
+                                                <div
+                                                    className="bg-pink-500 h-full rounded-full"
+                                                    style={{ width: `${(c.total / (topClientes[0]?.total || 1)) * 100}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                        <span className="font-bold text-slate-700 text-sm">${c.total.toLocaleString()}</span>
+                                    </div>
+                                ))}
+                                {topClientes.length === 0 && <p className="text-slate-400 text-center text-sm">Sin datos de clientes.</p>}
+                            </div>
+                        </div>
+
+                        {/* Ventas por Empleado Widget */}
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                            <h3 className="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2">
+                                <Users size={20} className="text-purple-500" />
+                                Rendimiento Equipo
+                            </h3>
+                            <div className="flex flex-col gap-3">
+                                {ventasPorEmpleado.map((e, idx) => (
+                                    <div key={idx} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition-colors cursor-default">
+                                        <span className="text-sm font-medium text-slate-700">{e.empleado}</span>
+                                        <span className="text-sm font-bold text-purple-700">${e.total.toLocaleString()}</span>
+                                    </div>
+                                ))}
+                                {ventasPorEmpleado.length === 0 && <p className="text-slate-400 text-sm">Sin datos aún.</p>}
+                            </div>
+                        </div>
+
+                        {/* Alerta Stock Bajo */}
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-red-100 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-red-50 rounded-bl-full -mr-10 -mt-10 z-0 opacity-50"></div>
+                            <h3 className="font-bold text-lg text-red-600 mb-4 flex items-center gap-2 relative z-10">
+                                <AlertTriangle size={20} />
+                                Stock Crítico
+                            </h3>
+                            <div className="space-y-3 relative z-10">
+                                {stockBajo.length === 0 ? (
+                                    <div className="p-4 bg-green-50 rounded-xl border border-green-100 flex items-center gap-3">
+                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                        <p className="text-green-700 text-sm font-medium">Todo el inventario OK</p>
+                                    </div>
+                                ) : (
+                                    stockBajo.map((item: any, i: number) => {
+                                        const prod = Array.isArray(item.Producto) ? item.Producto[0] : item.Producto;
+                                        return (
+                                            <div key={i} className="flex justify-between items-center p-3 bg-red-50/50 rounded-xl border border-red-100">
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs font-bold text-red-800">
+                                                        {prod?.Nombre ?? "Desc."}
+                                                    </span>
+                                                    <span className="text-[10px] text-red-500 uppercase">{prod?.Marca}</span>
+                                                </div>
+                                                <span className="bg-white text-red-600 px-2 py-1 rounded text-xs font-bold shadow-sm border border-red-100">
+                                                    {Number(item.Cantidad)} u.
+                                                </span>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
             </div>
         </div>
     );

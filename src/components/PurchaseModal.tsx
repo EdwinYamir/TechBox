@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { X, ShoppingBag, CheckCircle, AlertCircle, Plus, Minus } from "lucide-react";
+import { X, ShoppingBag, CheckCircle2, AlertCircle, Plus, Minus, Package, CreditCard } from "lucide-react";
 
 interface PurchaseModalProps {
     isOpen: boolean;
@@ -44,121 +44,160 @@ export default function PurchaseModal({ isOpen, onClose, product, onBuy }: Purch
         }
     };
 
+    const isOutOfStock = stock <= 0;
+    const isLowStock = stock > 0 && stock < 5;
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md transition-all duration-300">
             <div
                 className="
-                    bg-white rounded-2xl shadow-2xl w-full max-w-md relative overflow-hidden
+                    bg-white rounded-3xl shadow-2xl w-full max-w-md relative overflow-hidden
                     transform transition-all duration-300 scale-100 animate-in fade-in zoom-in-95
-                    border border-gray-100
+                    border border-slate-100 ring-4 ring-slate-50
                 "
             >
-                {/* Header Decoration */}
-                <div className="h-24 bg-gradient-to-r from-blue-600 to-indigo-600 absolute top-0 w-full mb-10"></div>
+                {/* Header Decoration with Mesh Gradient */}
+                <div className="h-32 bg-gradient-to-br from-blue-600 via-cyan-500 to-blue-700 absolute top-0 w-full">
+                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 mix-blend-overlay"></div>
+                </div>
 
                 <button
                     onClick={onClose}
                     type="button"
-                    className="absolute top-4 right-4 z-20 text-white hover:bg-white/20 p-2 rounded-full transition-colors"
+                    className="absolute top-4 right-4 z-20 text-white/90 hover:text-white hover:bg-white/20 p-2 rounded-full transition-colors backdrop-blur-sm"
                     aria-label="Cerrar modal"
                 >
-                    <X size={20} />
+                    <X size={22} />
                 </button>
 
-                <div className="pt-16 px-8 pb-8 flex flex-col items-center text-center relative z-10">
-                    <div className="bg-white p-3 rounded-2xl shadow-lg mb-4 -mt-12">
-                        <span className="text-4xl">💻</span>
+                <div className="pt-20 px-8 pb-8 flex flex-col items-center relative z-10">
+
+                    {/* Icon Circle */}
+                    <div className="bg-white p-4 rounded-3xl shadow-xl shadow-blue-900/5 mb-6 ring-4 ring-white">
+                        <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
+                            <Package size={32} />
+                        </div>
                     </div>
 
-                    <h2 className="text-2xl font-bold text-gray-900 mb-1">{product.Nombre}</h2>
-                    <p className="text-gray-500 text-sm mb-6">{product.Marca} • {product.Modelo}</p>
+                    {/* Product Info */}
+                    <div className="text-center mb-8">
+                        <span className="inline-block px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider mb-3">
+                            {product.Marca}
+                        </span>
+                        <h2 className="text-2xl font-bold text-slate-900 mb-2 leading-tight">
+                            {product.Nombre}
+                        </h2>
+                        <p className="text-slate-400 text-sm font-medium">Modelo: {product.Modelo}</p>
+                    </div>
 
-                    <div className="w-full bg-gray-50 rounded-xl p-4 mb-4 border border-gray-100 flex justify-between items-center">
+                    {/* Price & Stock Stats */}
+                    <div className="w-full bg-slate-50/80 rounded-2xl p-4 mb-6 border border-slate-100 flex justify-between items-center group hover:bg-slate-50 transition-colors">
                         <div className="text-left">
-                            <p className="text-xs uppercase text-gray-400 font-bold tracking-wider">Precio Unit.</p>
-                            <p className="text-2xl font-bold text-gray-900">${product.PrecioVenta}</p>
+                            <p className="text-[10px] uppercase text-slate-400 font-bold tracking-wider mb-1">Precio Unitario</p>
+                            <p className="text-2xl font-black text-slate-800 tracking-tight">${Number(product.PrecioVenta).toFixed(2)}</p>
                         </div>
+                        <div className="w-px h-10 bg-slate-200/60"></div>
                         <div className="text-right">
-                            <p className="text-xs uppercase text-gray-400 font-bold tracking-wider">Disponibles</p>
-                            <p className={`text-lg font-bold ${stock > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                                {stock}
-                            </p>
+                            <p className="text-[10px] uppercase text-slate-400 font-bold tracking-wider mb-1">Stock</p>
+                            <div className={`
+                                inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-sm font-bold
+                                ${isOutOfStock
+                                    ? 'bg-red-100 text-red-600'
+                                    : isLowStock
+                                        ? 'bg-amber-100 text-amber-700'
+                                        : 'bg-emerald-100 text-emerald-700'
+                                }
+                            `}>
+                                {stock} u.
+                            </div>
                         </div>
                     </div>
 
-                    {stock > 0 && (
-                        <div className="w-full flex items-center justify-between mb-6 px-1">
-                            <div className="flex items-center gap-3">
-                                <span className="text-sm text-gray-500 font-medium">Cantidad:</span>
-                                <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                    {!isOutOfStock && (
+                        <div className="w-full space-y-6">
+                            {/* Quantity Selector */}
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-slate-600 font-semibold">Cantidad a comprar</span>
+                                <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
                                     <button
                                         onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                                        className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                        className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                                         disabled={quantity <= 1 || isBuying}
-                                        type="button"
                                     >
-                                        <Minus size={16} />
+                                        <Minus size={18} />
                                     </button>
-                                    <span className="w-10 text-center font-bold text-gray-900">{quantity}</span>
+                                    <span className="w-12 text-center font-bold text-slate-900 text-lg tabular-nums">
+                                        {quantity}
+                                    </span>
                                     <button
                                         onClick={() => setQuantity((q) => Math.min(stock, q + 1))}
-                                        className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                        className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                                         disabled={quantity >= stock || isBuying}
-                                        type="button"
                                     >
-                                        <Plus size={16} />
+                                        <Plus size={18} />
                                     </button>
                                 </div>
                             </div>
-                            <div className="text-right">
-                                <p className="text-xs uppercase text-gray-400 font-bold tracking-wider">Total</p>
-                                <p className="text-2xl font-bold text-blue-600">
+
+                            {/* Divider with Total */}
+                            <div className="border-t border-slate-100 pt-4 flex justify-between items-end">
+                                <span className="text-sm font-medium text-slate-500">Total estimado</span>
+                                <span className="text-3xl font-black text-blue-600 tracking-tight">
                                     ${(product.PrecioVenta * quantity).toFixed(2)}
-                                </p>
+                                </span>
                             </div>
                         </div>
                     )}
 
-                    {success ? (
-                        <div className="w-full bg-green-50 text-green-700 py-3 rounded-xl flex items-center justify-center gap-2 font-medium animate-pulse">
-                            <CheckCircle size={20} />
-                            ¡Compra realizada con éxito!
-                        </div>
-                    ) : (stock > 0 ? (
-                        <button
-                            onClick={handleBuyClick}
-                            disabled={isBuying}
-                            className={`
-                                w-full py-3.5 rounded-xl font-bold text-white shadow-lg shadow-blue-500/30
-                                flex items-center justify-center gap-2 transition-all active:scale-95
-                                ${isBuying
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/50 hover:-translate-y-0.5'
-                                }
-                            `}
-                        >
-                            {isBuying ? (
-                                <span className="flex items-center gap-2">
-                                    <span className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></span>
-                                    Procesando...
-                                </span>
-                            ) : (
-                                <>
-                                    <ShoppingBag size={20} />
-                                    Comprar Ahora
-                                </>
-                            )}
-                        </button>
-                    ) : (
-                        <div className="w-full bg-red-50 text-red-700 py-3 rounded-xl flex items-center justify-center gap-2 font-medium">
-                            <AlertCircle size={20} />
-                            Producto Agotado
-                        </div>
-                    ))}
+                    <div className="w-full mt-8">
+                        {success ? (
+                            <div className="w-full bg-emerald-50 text-emerald-600 py-4 rounded-2xl flex items-center justify-center gap-3 font-bold border border-emerald-100 animate-in zoom-in duration-300">
+                                <CheckCircle2 size={24} />
+                                <div className="flex flex-col text-left leading-4">
+                                    <span>¡Compra Exitosa!</span>
+                                    <span className="text-xs font-medium text-emerald-500/80">Stock actualizado correctamente</span>
+                                </div>
+                            </div>
+                        ) : (isOutOfStock ? (
+                            <div className="w-full bg-red-50 text-red-600 py-4 rounded-2xl flex items-center justify-center gap-2 font-bold border border-red-100">
+                                <AlertCircle size={20} />
+                                Producto Agotado
+                            </div>
+                        ) : (
+                            <button
+                                onClick={handleBuyClick}
+                                disabled={isBuying}
+                                className={`
+                                    w-full py-4 rounded-2xl font-bold text-white shadow-lg shadow-blue-500/25
+                                    flex items-center justify-center gap-3 transition-all transform active:scale-[0.98]
+                                    ${isBuying
+                                        ? 'bg-slate-300 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-blue-600 to-cyan-500 hover:shadow-blue-500/40 hover:-translate-y-1'
+                                    }
+                                `}
+                            >
+                                {isBuying ? (
+                                    <>
+                                        <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin"></div>
+                                        <span>Procesando...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <ShoppingBag size={20} />
+                                        Confirmar Compra
+                                    </>
+                                )}
+                            </button>
+                        ))}
+                    </div>
 
-                    <p className="mt-4 text-xs text-gray-400 mx-auto max-w-[80%]">
-                        Al hacer clic en "Comprar Ahora", el stock se actualizará automáticamente en nuestra base de datos.
-                    </p>
+                    {!success && !isOutOfStock && (
+                        <p className="mt-5 text-center text-xs text-slate-400 max-w-[90%]">
+                            <span className="flex items-center justify-center gap-1.5 mb-1">
+                                <CreditCard size={12} /> Pago seguro procesado al instante
+                            </span>
+                        </p>
+                    )}
                 </div>
             </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Tag, Layers, ShoppingCart, AlertCircle, CheckCircle2, Package } from "lucide-react";
 
 interface ProductCardProps {
     nombre: string;
@@ -21,68 +22,82 @@ const ProductCard: React.FC<ProductCardProps> = ({
     stock,
     onClick,
 }) => {
+    const isOutOfStock = stock === 0;
+    const isLowStock = stock > 0 && stock < 5;
+
     return (
         <article
             onClick={onClick}
             className="
-                bg-white rounded-xl p-6 border border-[#eef1f5] w-full flex flex-col gap-5
-                transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
-                shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-1px_rgba(0,0,0,0.03)]
-                relative overflow-hidden cursor-pointer
-                hover:-translate-y-1 hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)]
-                hover:border-[#bce3eb]
-                group
+                group relative bg-white rounded-2xl overflow-hidden
+                border border-slate-100 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)]
+                transition-all duration-300 ease-out
+                hover:shadow-[0_12px_24px_-8px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:border-blue-100
+                cursor-pointer flex flex-col h-full
             "
         >
-            <div
-                className="
-                    absolute top-0 left-0 w-full h-1 opacity-0
-                    bg-gradient-to-r from-[#4bb5c8] to-[#0a4c78]
-                    transition-opacity duration-300 group-hover:opacity-100
-                "
-            ></div>
+            {/* Top Hover Gradient Line */}
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-            <div className="flex flex-col gap-2">
-                <h3 className="text-xl font-bold text-gray-900">{nombre}</h3>
-                <p className="text-[#4bb5c8] text-sm font-medium">
-                    {marca} — {modelo}
-                </p>
-            </div>
+            <div className="p-6 flex flex-col h-full relative">
 
-            <hr className="border-t border-gray-100" />
-
-            <div className="flex flex-col gap-4">
-                <div className="flex items-start gap-3">
-                    <span className="text-lg bg-gray-50 w-9 h-9 flex items-center justify-center rounded-lg">📦</span>
-                    <div>
-                        <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">Categoría</span>
-                        <p className="text-gray-600 text-sm font-medium">{categoria}</p>
-                    </div>
+                {/* Header: Brand & Category badges */}
+                <div className="flex items-center justify-between mb-4">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-50 text-slate-500 border border-slate-100 group-hover:border-blue-100 transition-colors">
+                        <Tag size={10} />
+                        {marca}
+                    </span>
+                    <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
+                        {categoria}
+                    </span>
                 </div>
 
-                <div className="flex items-start gap-3">
-                    <span className="text-lg bg-gray-50 w-9 h-9 flex items-center justify-center rounded-lg">💲</span>
-                    <div>
-                        <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">Precio</span>
-                        <p className="text-gray-700 font-semibold text-lg">
-                            ${precio.toFixed(2)}
-                        </p>
-                    </div>
+                {/* Main Content */}
+                <div className="mb-6">
+                    <h3 className="text-lg font-bold text-slate-800 leading-tight mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">
+                        {nombre}
+                    </h3>
+                    <p className="text-sm text-slate-400 font-medium flex items-center gap-2">
+                        <Layers size={14} />
+                        {modelo}
+                    </p>
                 </div>
 
-                <div className="flex items-start gap-3">
-                    <span className="text-lg bg-gray-50 w-9 h-9 flex items-center justify-center rounded-lg">📊</span>
-                    <div>
-                        <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">Stock</span>
-                        <p
-                            className={`font-semibold px-3 py-0.5 rounded-full text-xs inline-block ${stock > 0
-                                ? "text-green-700 bg-green-50"
-                                : "text-red-700 bg-red-50"
-                                }`}
-                        >
-                            {stock > 0 ? `${stock} unidades` : "Agotado"}
-                        </p>
+                {/* Footer Section (Price & Stock) */}
+                <div className="mt-auto space-y-5">
+
+                    {/* Price Row */}
+                    <div className="flex items-end justify-between border-t border-slate-50 pt-4">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] uppercase text-slate-400 font-semibold mb-0.5">Precio</span>
+                            <span className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                                ${precio.toFixed(2)}
+                            </span>
+                        </div>
+
+                        {/* Add to Cart / View Button (Visual) */}
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                            <ShoppingCart size={18} />
+                        </div>
                     </div>
+
+                    {/* Stock Status Bar */}
+                    <div className={`
+                        flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold
+                        ${isOutOfStock
+                            ? "bg-red-50 border-red-100 text-red-600"
+                            : isLowStock
+                                ? "bg-amber-50 border-amber-100 text-amber-600"
+                                : "bg-emerald-50 border-emerald-100 text-emerald-600"
+                        }
+                    `}>
+                        {isOutOfStock ? <AlertCircle size={14} /> : <CheckCircle2 size={14} />}
+                        <span className="flex-1">
+                            {isOutOfStock ? "Producto Agotado" : `${stock} unidades disponibles`}
+                        </span>
+                        {!isOutOfStock && <Package size={14} className="opacity-50" />}
+                    </div>
+
                 </div>
             </div>
         </article>
