@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ProductCard from "@/components/ProductCard";
+import PurchaseModal from "@/components/PurchaseModal";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -12,6 +13,7 @@ const supabase = createClient(
 export default function ProductosPage() {
     const [productos, setProductos] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
     useEffect(() => {
         const fetchProductos = async () => {
@@ -41,6 +43,58 @@ export default function ProductosPage() {
         fetchProductos();
     }, []);
 
+    const handleBuy = async (product: any) => {
+        if (!product) return;
+
+        // 1. Get current stock
+        const currentStock = Array.isArray(product.Inventario)
+            ? product.Inventario[0]?.Cantidad
+            : product.Inventario?.Cantidad;
+
+        if (currentStock <= 0) return;
+
+        const newStock = currentStock - 1;
+
+        // 2. Optimistic UI Update (optional, but good for UX)
+        // We'll update the state after success to be safe, or optimistic. 
+        // Let's do optimistic for "wow" factor, but revert if fail? 
+        // Usually simpler to just wait unless slow. The modal shows a loading spinner.
+        // We will update the local state so the modal and the card reflect the new stock.
+
+        // 3. Update Supabase
+        // We assume 'Inventario' table has a column 'IdProducto' or we can find the row by IdProducto.
+        const { error } = await supabase
+            .from("Inventario")
+            .update({ Cantidad: newStock })
+            .eq("IdProducto", product.IdProducto);
+
+        if (error) {
+            console.error("Error updating stock:", error);
+            alert("Hubo un error al realizar la compra.");
+            throw error; // Let modal handle exception
+        }
+
+        // 4. Update local state
+        setProductos((prev) =>
+            prev.map((p) => {
+                if (p.IdProducto === product.IdProducto) {
+                    // Update the simple or array structure
+                    const newInventario = Array.isArray(p.Inventario)
+                        ? [{ ...p.Inventario[0], Cantidad: newStock }]
+                        : { ...p.Inventario, Cantidad: newStock };
+
+                    const updatedProduct = { ...p, Inventario: newInventario };
+
+                    // Also update selectedProduct so modal updates in real-time
+                    setSelectedProduct(updatedProduct);
+
+                    return updatedProduct;
+                }
+                return p;
+            })
+        );
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center text-xl text-gray-600">
@@ -51,6 +105,13 @@ export default function ProductosPage() {
 
     return (
         <div className="min-h-screen bg-white px-6 py-10 flex flex-col items-center">
+            <PurchaseModal
+                isOpen={!!selectedProduct}
+                onClose={() => setSelectedProduct(null)}
+                product={selectedProduct}
+                onBuy={handleBuy}
+            />
+
             <button
                 onClick={() => window.history.back()}
                 className="mb-6 flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 
@@ -70,7 +131,7 @@ export default function ProductosPage() {
                         categoria={p.Categoria}
                         precio={p.PrecioVenta}
                         stock={(Array.isArray(p.Inventario) ? p.Inventario[0]?.Cantidad : p.Inventario?.Cantidad) ?? 0}
-                        onClick={() => console.log("Producto:", p.Nombre)}
+                        onClick={() => setSelectedProduct(p)}
                     />
                 ))}
             </div>
