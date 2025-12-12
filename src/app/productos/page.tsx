@@ -2,40 +2,53 @@
 
 import { useEffect, useState } from "react";
 import ProductCard from "@/components/ProductCard"; // Ajusta la ruta si es diferente
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabase } from "@/lib/supabaseClient";
 
 export default function ProductosPage() {
     const [productos, setProductos] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchProductos = async () => {
-            const { data, error } = await supabase
-                .from("Producto")
-                .select(`
-        IdProducto,
-        Nombre,
-        Modelo,
-        Categoria,
-        Marca,
-        PrecioVenta,
-        Inventario (Cantidad)
-      `);
+            try {
+                console.log("Iniciando carga de productos...");
+                // Debug vars (safe logging)
+                const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+                console.log("Supabase URL configurada:", url ? "Sí" : "No");
 
-            console.log("DATA SUPABASE:", data);  // ← AQUÍ
+                const { data, error } = await supabase
+                    .from("Producto")
+                    .select(`
+                        IdProducto,
+                        Nombre,
+                        Modelo,
+                        Categoria,
+                        Marca,
+                        PrecioVenta,
+                        Inventario (Cantidad)
+                    `);
 
-            if (error) {
-                console.error("Error cargando productos:", error);
-            } else {
-                setProductos(data);
+                console.log("Respuesta Supabase - Error:", error);
+                console.log("Respuesta Supabase - Data:", data);
+
+                if (error) {
+                    console.error("Error cargando productos:", error);
+                    setError(error.message || "Error desconocido al cargar productos");
+                    setProductos([]);
+                } else {
+                    if (!data || data.length === 0) {
+                        console.warn("La consulta no retornó datos.");
+                    }
+                    setProductos(data || []);
+                    setError(null);
+                }
+            } catch (err: any) {
+                console.error("Excepción inesperada:", err);
+                setError(err.message || "Error inesperado");
+            } finally {
+                setLoading(false);
             }
-
-            setLoading(false);
         };
 
         fetchProductos();
@@ -45,6 +58,21 @@ export default function ProductosPage() {
         return (
             <div className="min-h-screen flex items-center justify-center text-xl text-gray-600">
                 Cargando productos...
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center text-red-600 p-4">
+                <h2 className="text-2xl font-bold mb-2">Error al cargar productos</h2>
+                <p className="text-lg bg-red-50 p-4 rounded border border-red-200">{error}</p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="mt-6 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-700"
+                >
+                    Reintentar
+                </button>
             </div>
         );
     }
@@ -60,20 +88,26 @@ export default function ProductosPage() {
             </button>
             <h1 className="text-4xl font-bold text-gray-900 mb-10">Catálogo de Productos</h1>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
-                {productos.map((p) => (
-                    <ProductCard
-                        key={p.IdProducto}
-                        nombre={p.Nombre}
-                        marca={p.Marca}
-                        modelo={p.Modelo}
-                        categoria={p.Categoria}
-                        precio={p.PrecioVenta}
-                        stock={p.Inventario?.Cantidad ?? 0}  // ← FUNCIONA CON TU TABLA REAL
-                        onClick={() => console.log("Producto:", p.Nombre)}
-                    />
-                ))}
-            </div>
+            {productos.length === 0 ? (
+                <div className="text-center text-gray-500 text-xl mt-10">
+                    <p>No hay productos registrados en el sistema.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
+                    {productos.map((p) => (
+                        <ProductCard
+                            key={p.IdProducto}
+                            nombre={p.Nombre}
+                            marca={p.Marca}
+                            modelo={p.Modelo}
+                            categoria={p.Categoria}
+                            precio={p.PrecioVenta}
+                            stock={p.Inventario?.Cantidad ?? 0}
+                            onClick={() => console.log("Producto:", p.Nombre)}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
