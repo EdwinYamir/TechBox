@@ -69,7 +69,7 @@ export default function ProductosPage() {
                         modelo={p.Modelo}
                         categoria={p.Categoria}
                         precio={p.PrecioVenta}
-                        stock={p.Inventario?.Cantidad ?? 0}
+                        stock={(Array.isArray(p.Inventario) ? p.Inventario[0]?.Cantidad : p.Inventario?.Cantidad) ?? 0}
                         onClick={() => console.log("Producto:", p.Nombre)}
                     />
                 ))}

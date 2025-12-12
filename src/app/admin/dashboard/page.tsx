@@ -24,11 +24,11 @@ export default function AdminDashboard() {
     const [serviciosPendientes, setServiciosPendientes] = useState(0);
     const [ventasRecientes, setVentasRecientes] = useState<any[]>([]);
     const [stockBajo, setStockBajo] = useState<any[]>([]);
-
-    // 🚀 NUEVOS MÓDULOS
     const [topClientes, setTopClientes] = useState<any[]>([]);
     const [ventasPorEmpleado, setVentasPorEmpleado] = useState<any[]>([]);
     const [valorInventario, setValorInventario] = useState(0);
+    const [verStockTodos, setVerStockTodos] = useState(false);
+    const [inventario, setInventario] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -39,10 +39,10 @@ export default function AdminDashboard() {
             setTotalProductos(countProductos || 0);
 
             // Total Stock (sumar cantidades de Inventario)
-            const { data: inventario } = await supabase
+            const { data: inventarioStock } = await supabase
                 .from("Inventario")
                 .select("Cantidad");
-            setTotalStock(inventario?.reduce((acc, i) => acc + Number(i.Cantidad), 0) || 0);
+            setTotalStock(inventarioStock?.reduce((acc, i) => acc + Number(i.Cantidad), 0) || 0);
 
             // Total Ventas Dinero
             const { data: ventas } = await supabase
@@ -140,19 +140,23 @@ export default function AdminDashboard() {
                 .select(`
                     Cantidad,
                     Producto (
-                        PrecioCosto
+                        PrecioCosto,
+                        Nombre,
+                        Marca
                     )
                 `);
 
             // CORRECCIÓN: Producto viene como ARRAY -> usar [0]
             const totalValor =
                 inventarioCompleto?.reduce((acc: number, item: any) => {
-                    const precio = Number(item.Producto?.PrecioCosto || 0);
+                    const prod = Array.isArray(item.Producto) ? item.Producto[0] : item.Producto;
+                    const precio = Number(prod?.PrecioCosto || 0);
                     const cantidad = Number(item.Cantidad || 0);
                     return acc + cantidad * precio;
                 }, 0) || 0;
 
             setValorInventario(totalValor);
+            setInventario(inventarioCompleto || []);
 
             setLoading(false);
         };
@@ -186,7 +190,13 @@ export default function AdminDashboard() {
             {/* TARJETAS SUPERIORES */}
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-14">
                 <AdminCard title="Productos" value={totalProductos} icon={<Package size={32} />} color="blue" />
-                <AdminCard title="Stock total" value={totalStock} icon={<Boxes size={32} />} color="green" />
+                <AdminCard
+                    title="Stock total"
+                    value={totalStock}
+                    color="green"
+                    icon={<Boxes size={32} />}
+                    onClick={() => setVerStockTodos(true)}
+                />
                 <AdminCard title="Ventas totales ($)" value={totalVentas.toFixed(2)} icon={<DollarSign size={32} />} color="yellow" />
                 <AdminCard title="Servicios pendientes" value={serviciosPendientes} icon={<Wrench size={32} />} color="red" />
                 <AdminCard title="Valor inventario ($)" value={valorInventario.toFixed(2)} icon={<BarChart2 size={32} />} color="purple" />
@@ -244,17 +254,41 @@ export default function AdminDashboard() {
                     <h2 className="text-2xl font-semibold mb-4">Productos con stock bajo</h2>
 
                     {stockBajo.length === 0 && <p className="text-gray-600">Todos los productos tienen stock suficiente.</p>}
-                    {stockBajo.map((p: any, i: number) => (
-                        <div key={i} className="flex justify-between py-3 border-b">
-                            <span>
-                                {p.Producto?.[0]?.Nombre ?? "Producto desconocido"} {p.Producto?.[0]?.Marca ? `(${p.Producto?.[0]?.Marca})` : ""}
-                            </span>
-                            <span className="text-red-600 font-bold">{Number(p.Cantidad)} unidades</span>
-                        </div>
-                    ))}
+                    {stockBajo.map((item: any, i: number) => {
+                        const prod = Array.isArray(item.Producto) ? item.Producto[0] : item.Producto;
+                        return (
+                            <div key={i} className="flex justify-between py-3 border-b">
+                                <span>
+                                    {prod?.Nombre ?? "Producto desconocido"} {prod?.Marca ? `(${prod?.Marca})` : ""}
+                                </span>
+                                <span className="text-red-600 font-bold">{Number(item.Cantidad)} unidades</span>
+                            </div>
+                        );
+                    })}
 
                     <div className="mt-3 text-sm text-gray-500">Productos con cantidad menor a 5.</div>
                 </div>
+
+                {/* INVENTARIO COMPLETO */}
+                {verStockTodos && (
+                    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 mt-10">
+                        <h2 className="text-2xl font-semibold mb-4">Inventario completo</h2>
+
+                        {inventario?.map((item, i) => {
+                            const prod = Array.isArray(item.Producto) ? item.Producto[0] : item.Producto;
+                            return (
+                                <div key={i} className="flex justify-between py-3 border-b">
+                                    <span>
+                                        {prod?.Nombre ?? "Producto desconocido"}{" "}
+                                        ({prod?.Marca ?? "Sin marca"})
+                                    </span>
+                                    <span className="font-bold">{item.Cantidad} unidades</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+
 
             </div>
         </div>

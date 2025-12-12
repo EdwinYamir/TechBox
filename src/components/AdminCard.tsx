@@ -4,18 +4,20 @@ interface AdminCardProps {
     title: string;
     value: number | string;
     icon?: ReactNode;
-    color?: string; // tailwind color (opcional)
+    color?: string;
+    onClick?: () => void;   // ✅ AGREGADO
 }
 
-export default function AdminCard({ title, value, icon, color = "blue" }: AdminCardProps) {
+export default function AdminCard({ title, value, icon, color = "blue", onClick }: AdminCardProps) {
     return (
-        <div className="bg-white shadow-md rounded-xl p-6 flex items-center gap-4 border border-gray-100 hover:shadow-lg transition">
-            {/* Icono */}
+        <div
+            onClick={onClick}  // ✅ Ahora sí funciona
+            className="bg-white shadow-md rounded-xl p-6 flex items-center gap-4 border border-gray-100 hover:shadow-lg transition cursor-pointer"
+        >
             <div className={`p-3 rounded-full bg-${color}-100 text-${color}-600`}>
                 {icon}
             </div>
 
-            {/* Texto */}
             <div>
                 <p className="text-gray-600 text-sm">{title}</p>
                 <p className="text-3xl font-bold text-gray-900">{value}</p>
@@ -23,3 +25,4 @@ export default function AdminCard({ title, value, icon, color = "blue" }: AdminC
         </div>
     );
 }
+
