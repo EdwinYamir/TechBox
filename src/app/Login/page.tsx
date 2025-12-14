@@ -14,7 +14,7 @@ export default function LoginPage() {
     const [isRegister, setIsRegister] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    // 🔹 Datos cliente
+    //  Datos cliente
     const [nombre, setNombre] = useState("");
     const [apellido, setApellido] = useState("");
     const [telefono, setTelefono] = useState("");
@@ -33,9 +33,7 @@ export default function LoginPage() {
 
         setLoading(true);
 
-        // =====================
         // REGISTRO
-        // =====================
         if (isRegister) {
             const { data, error } = await supabase.auth.signUp({
                 email,
@@ -73,9 +71,7 @@ export default function LoginPage() {
             window.location.href = "/productos";
         }
 
-        // =====================
         // LOGIN
-        // =====================
         else {
             const { error } = await supabase.auth.signInWithPassword({
                 email,

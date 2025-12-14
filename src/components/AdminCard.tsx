@@ -5,13 +5,13 @@ interface AdminCardProps {
     value: number | string;
     icon?: ReactNode;
     color?: string;
-    onClick?: () => void;   // ✅ AGREGADO
+    onClick?: () => void;
 }
 
 export default function AdminCard({ title, value, icon, color = "blue", onClick }: AdminCardProps) {
     return (
         <div
-            onClick={onClick}  // ✅ Ahora sí funciona
+            onClick={onClick}
             className="bg-white shadow-md rounded-xl p-6 flex items-center gap-4 border border-gray-100 hover:shadow-lg transition cursor-pointer"
         >
             <div className={`p-3 rounded-full bg-${color}-100 text-${color}-600`}>

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { X, Mail, Lock, User, Phone, MapPin, ArrowRight, Loader2, LogIn } from "lucide-react";
 
-// Supabase config
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -50,9 +49,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         setLoading(true);
 
         try {
-            // =====================
             // REGISTRO
-            // =====================
             if (isRegister) {
                 const { data, error } = await supabase.auth.signUp({
                     email,
