@@ -1,22 +1,38 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { Laptop, Wrench, BarChart3, ArrowRight, Zap, Menu, X } from "lucide-react";
+import { Laptop, Wrench, BarChart3, ArrowRight, Zap, Menu, X, LogIn, LogOut } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import AuthModal from "@/components/AuthModal";
+import { createClient } from "@supabase/supabase-js";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
+    // Check active session
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    checkUser();
+
     if (!containerRef.current) return;
 
     const ctx = gsap.context(() => {
@@ -65,6 +81,12 @@ export default function Home() {
     return () => ctx.revert();
   }, []);
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    window.location.reload();
+  };
+
   return (
     <div ref={containerRef} className="min-h-screen bg-slate-50 font-sans selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden relative">
 
@@ -98,6 +120,28 @@ export default function Home() {
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
               </Link>
             ))}
+
+            {user ? (
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-slate-700">Hola, {user.email?.split('@')[0]}</span>
+                <button
+                  onClick={handleLogout}
+                  className="text-sm font-medium text-red-500 hover:text-red-700 transition-colors flex items-center gap-2"
+                >
+                  <LogOut size={18} />
+                  <span className="hidden lg:inline">Salir</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
+                className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors flex items-center gap-2"
+              >
+                <LogIn size={18} />
+                <span className="hidden lg:inline">Ingresar</span>
+              </button>
+            )}
+
             <Link
               href="/admin/dashboard"
               className="px-5 py-2.5 rounded-full bg-slate-900 text-white text-sm font-medium hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
@@ -134,6 +178,29 @@ export default function Home() {
               >
                 Catálogo
               </Link>
+              {user ? (
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="p-3 bg-slate-50 rounded-xl text-red-600 font-medium hover:bg-red-50 transition-colors text-left flex items-center gap-2"
+                >
+                  <LogOut size={18} />
+                  Cerrar Sesión
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsAuthModalOpen(true);
+                  }}
+                  className="p-3 bg-slate-50 rounded-xl text-slate-700 font-medium hover:bg-blue-50 hover:text-blue-600 transition-colors text-left flex items-center gap-2"
+                >
+                  <LogIn size={18} />
+                  Ingresar / Registrarse
+                </button>
+              )}
               <Link
                 href="/admin/dashboard"
                 className="p-3 bg-slate-900 rounded-xl text-white font-medium text-center shadow-lg shadow-blue-900/20 active:scale-[0.98] transition-transform"
@@ -239,6 +306,10 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
     </div>
   );
 }

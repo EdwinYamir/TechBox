@@ -131,24 +131,37 @@ export default function AdminDashboard() {
             setStockBajo(productosStock || []);
 
             // 7. Top Clientes
-            const { data: topClientesData } = await supabase
+            const { data: ventasClientes } = await supabase
                 .from("Venta")
                 .select(`
-                    TotalVenta,
-                    Cliente (
-                        Nombre,
-                        Apellido
-                    )
-                `);
+        TotalVenta,
+        IdCliente,
+        Cliente (
+            IdCliente,
+            Nombre,
+            Apellido,
+            Email
+        )
+    `)
+                .not("IdCliente", "is", null);
 
-            const clientesSummed: Record<string, number> = {};
-            topClientesData?.forEach((v: any) => {
-                const key = `${v.Cliente?.Nombre ?? "Cliente"} ${v.Cliente?.Apellido ?? ""}`.trim();
-                clientesSummed[key] = (clientesSummed[key] || 0) + Number(v.TotalVenta);
+            const clientesMap: Record<number, { nombre: string; total: number }> = {};
+
+            ventasClientes?.forEach((v: any) => {
+                const id = v.IdCliente;
+                const nombreCompleto = `${v.Cliente?.Nombre ?? "Cliente"} ${v.Cliente?.Apellido ?? ""}`.trim();
+
+                if (!clientesMap[id]) {
+                    clientesMap[id] = {
+                        nombre: nombreCompleto,
+                        total: 0,
+                    };
+                }
+
+                clientesMap[id].total += Number(v.TotalVenta);
             });
 
-            const top3 = Object.entries(clientesSummed)
-                .map(([cliente, total]) => ({ cliente, total }))
+            const top3 = Object.values(clientesMap)
                 .sort((a, b) => b.total - a.total)
                 .slice(0, 3);
 
@@ -394,7 +407,7 @@ export default function AdminDashboard() {
                                             {idx + 1}
                                         </div>
                                         <div className="flex-1">
-                                            <p className="font-semibold text-slate-800 leading-tight">{c.cliente}</p>
+                                            <p className="font-semibold text-slate-800 leading-tight">{c.nombre}</p>
                                             <div className="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
                                                 <div
                                                     className="bg-pink-500 h-full rounded-full"
