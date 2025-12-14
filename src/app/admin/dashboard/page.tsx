@@ -12,52 +12,15 @@ import {
     ArrowLeft,
     TrendingUp,
     AlertTriangle,
-    ChevronRight,
-    Search
 } from "lucide-react";
+import AdminCard from "@/components/AdminCard";
+import InventoryModal from "@/components/InventoryModal";
 
 // Supabase config
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
-
-// Componente de Tarjeta de Estadísticas (Local para estilos personalizados)
-const StatCard = ({ title, value, icon: Icon, color, onClick, subtext }: any) => {
-    // Definir temas de color con Tailwind
-    const colorClasses: Record<string, string> = {
-        blue: "bg-blue-50 text-blue-600 ring-blue-100",
-        green: "bg-emerald-50 text-emerald-600 ring-emerald-100",
-        yellow: "bg-amber-50 text-amber-600 ring-amber-100",
-        red: "bg-rose-50 text-rose-600 ring-rose-100",
-        purple: "bg-violet-50 text-violet-600 ring-violet-100",
-        pink: "bg-pink-50 text-pink-600 ring-pink-100",
-    };
-
-    const theme = colorClasses[color] || colorClasses.blue;
-
-    return (
-        <div
-            onClick={onClick}
-            className={`
-                relative bg-white p-6 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] 
-                hover:shadow-[0_8px_30px_-4px_rgba(6,81,237,0.1)] transition-all duration-300 group
-                ${onClick ? 'cursor-pointer hover:scale-[1.02] active:scale-[0.98]' : ''}
-            `}
-        >
-            <div className="flex items-start justify-between">
-                <div>
-                    <p className="text-slate-500 text-sm font-medium mb-1">{title}</p>
-                    <h3 className="text-3xl font-bold text-slate-800 tracking-tight">{value}</h3>
-                    {subtext && <p className="text-xs text-slate-400 mt-2">{subtext}</p>}
-                </div>
-                <div className={`p-3 rounded-xl ${theme} ring-1 group-hover:ring-2 transition-all`}>
-                    <Icon size={24} />
-                </div>
-            </div>
-        </div>
-    );
-};
 
 export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
@@ -252,40 +215,40 @@ export default function AdminDashboard() {
 
                 {/* KPIs Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-                    <StatCard
+                    <AdminCard
                         title="Productos"
                         value={totalProductos}
                         icon={Package}
                         color="blue"
                     />
-                    <StatCard
+                    <AdminCard
                         title="Stock Total"
                         value={totalStock}
                         icon={Boxes}
                         color="green"
-                        subtext="Click para ver inventario"
-                        onClick={() => setVerStockTodos(!verStockTodos)}
+                        subtext="Click ver inventario"
+                        onClick={() => setVerStockTodos(true)}
                     />
-                    <StatCard
+                    <AdminCard
                         title="Ingresos"
                         value={`$${totalVentas.toLocaleString()}`}
                         icon={DollarSign}
                         color="yellow"
                     />
-                    <StatCard
+                    <AdminCard
                         title="Servicios"
                         value={serviciosPendientes}
                         icon={Wrench}
                         color="red"
                         subtext="Pendientes"
                     />
-                    <StatCard
+                    <AdminCard
                         title="Valor Inventario"
                         value={`$${valorInventario.toLocaleString()}`}
                         icon={BarChart2}
                         color="purple"
                     />
-                    <StatCard
+                    <AdminCard
                         title="Top Clientes"
                         value={topClientes.length}
                         icon={Users}
@@ -337,55 +300,6 @@ export default function AdminDashboard() {
                                 )}
                             </div>
                         </div>
-
-                        {/* Inventario Completo (Condicional) */}
-                        {verStockTodos && (
-                            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-                                <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
-                                    <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-                                        <Boxes size={20} className="text-green-600" />
-                                        Inventario Detallado
-                                    </h3>
-                                    {/* Placeholder para filtro futuro */}
-                                    <div className="relative hidden md:block">
-                                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                                        <input
-                                            type="text"
-                                            placeholder="Buscar producto..."
-                                            className="pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                                            readOnly // Para esta demo
-                                        />
-                                    </div>
-                                </div>
-                                <div className="max-h-[500px] overflow-y-auto">
-                                    <table className="w-full text-left">
-                                        <thead className="sticky top-0 bg-white shadow-sm z-10">
-                                            <tr className="text-xs uppercase text-slate-400 border-b border-slate-100">
-                                                <th className="px-6 py-3 font-semibold">Producto</th>
-                                                <th className="px-6 py-3 font-semibold">Marca</th>
-                                                <th className="px-6 py-3 font-semibold text-right">Stock</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-50">
-                                            {inventario.map((item, i) => {
-                                                const prod = Array.isArray(item.Producto) ? item.Producto[0] : item.Producto;
-                                                return (
-                                                    <tr key={i} className="hover:bg-slate-50 transition-colors">
-                                                        <td className="px-6 py-3 font-medium text-slate-700">{prod?.Nombre ?? "Sin nombre"}</td>
-                                                        <td className="px-6 py-3 text-slate-500 text-sm">{prod?.Marca ?? "-"}</td>
-                                                        <td className="px-6 py-3 text-right">
-                                                            <span className={`px-2 py-1 rounded-md text-xs font-bold ${item.Cantidad < 5 ? 'bg-red-50 text-red-600 ring-1 ring-red-100' : 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100'}`}>
-                                                                {item.Cantidad} u.
-                                                            </span>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     {/* Right Column (1/3) */}
@@ -475,6 +389,14 @@ export default function AdminDashboard() {
 
                     </div>
                 </div>
+
+                {/* Modals */}
+                <InventoryModal
+                    isOpen={verStockTodos}
+                    onClose={() => setVerStockTodos(false)}
+                    inventario={inventario}
+                />
+
             </div>
         </div>
     );
