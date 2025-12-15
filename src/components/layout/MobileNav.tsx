@@ -26,7 +26,7 @@ export default function MobileNav({ user, onLogout, onOpenAuth, onClose }: Props
                 )}
 
                 <Link
-                    href="/admin/dashboard"
+                    href="/admin"
                     className="bg-slate-900 text-white text-center py-2 rounded-xl"
                     onClick={onClose}
                 >
