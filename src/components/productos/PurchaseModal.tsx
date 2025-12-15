@@ -13,7 +13,7 @@ interface PurchaseModalProps {
 export default function PurchaseModal({ isOpen, onClose, product, onBuy }: PurchaseModalProps) {
     const [isBuying, setIsBuying] = useState(false);
     const [success, setSuccess] = useState(false);
-    const [quantity, setQuantity] = useState(1);
+    const [quantity, setQuantity] = useState<number | string>(1);
 
     useEffect(() => {
         if (isOpen) {
@@ -32,7 +32,7 @@ export default function PurchaseModal({ isOpen, onClose, product, onBuy }: Purch
     const handleBuyClick = async () => {
         setIsBuying(true);
         try {
-            await onBuy(product, quantity);
+            await onBuy(product, Number(quantity) || 1);
             setSuccess(true);
             setTimeout(() => {
                 onClose();
@@ -120,19 +120,44 @@ export default function PurchaseModal({ isOpen, onClose, product, onBuy }: Purch
                                 <span className="text-sm text-slate-600 font-semibold">Cantidad a comprar</span>
                                 <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
                                     <button
-                                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                                        onClick={() => setQuantity((q) => Math.max(1, Number(q) - 1))}
                                         className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                                        disabled={quantity <= 1 || isBuying}
+                                        disabled={Number(quantity) <= 1 || isBuying}
                                     >
                                         <Minus size={18} />
                                     </button>
-                                    <span className="w-12 text-center font-bold text-slate-900 text-lg tabular-nums">
-                                        {quantity}
-                                    </span>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max={stock}
+                                        value={quantity}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (val === "") {
+                                                setQuantity("");
+                                                return;
+                                            }
+                                            const num = parseInt(val);
+                                            if (!isNaN(num)) {
+                                                if (num > stock) {
+                                                    setQuantity(stock);
+                                                } else {
+                                                    setQuantity(num);
+                                                }
+                                            }
+                                        }}
+                                        onBlur={() => {
+                                            let num = Number(quantity);
+                                            if (isNaN(num) || num < 1) num = 1;
+                                            if (num > stock) num = stock;
+                                            setQuantity(num);
+                                        }}
+                                        className="w-16 text-center font-bold text-slate-900 text-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg mx-1"
+                                    />
                                     <button
-                                        onClick={() => setQuantity((q) => Math.min(stock, q + 1))}
+                                        onClick={() => setQuantity((q) => Math.min(stock, Number(q) + 1))}
                                         className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                                        disabled={quantity >= stock || isBuying}
+                                        disabled={Number(quantity) >= stock || isBuying}
                                     >
                                         <Plus size={18} />
                                     </button>
@@ -143,7 +168,7 @@ export default function PurchaseModal({ isOpen, onClose, product, onBuy }: Purch
                             <div className="border-t border-slate-100 pt-4 flex justify-between items-end">
                                 <span className="text-sm font-medium text-slate-500">Total estimado</span>
                                 <span className="text-3xl font-black text-blue-600 tracking-tight">
-                                    ${(product.PrecioVenta * quantity).toFixed(2)}
+                                    ${(product.PrecioVenta * (Number(quantity) || 0)).toFixed(2)}
                                 </span>
                             </div>
                         </div>
