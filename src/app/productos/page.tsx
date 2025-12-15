@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ProductCard from "@/components/ProductCard";
-import PurchaseModal from "@/components/PurchaseModal";
+import ProductCard from "@/components/productos/ProductCard";
+import PurchaseModal from "@/components/productos/PurchaseModal";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(

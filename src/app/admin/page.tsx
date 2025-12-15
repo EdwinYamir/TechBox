@@ -13,8 +13,8 @@ import {
     TrendingUp,
     AlertTriangle,
 } from "lucide-react";
-import AdminCard from "@/components/AdminCard";
-import InventoryModal from "@/components/InventoryModal";
+import AdminCard from "@/components/admin/AdminCard";
+import InventoryModal from "@/components/admin/InventoryModal";
 
 // Supabase config
 const supabase = createClient(

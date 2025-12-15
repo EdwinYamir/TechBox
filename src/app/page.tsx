@@ -3,7 +3,7 @@
 import { Laptop, Wrench, BarChart3, ArrowRight, Zap, Menu, X, LogIn, LogOut } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import AuthModal from "@/components/AuthModal";
+import AuthModal from "@/components/login/AuthModal";
 import { createClient } from "@supabase/supabase-js";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -143,7 +143,7 @@ export default function Home() {
             )}
 
             <Link
-              href="/admin/dashboard"
+              href="/admin"
               className="px-5 py-2.5 rounded-full bg-slate-900 text-white text-sm font-medium hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
             >
               Admin Dashboard
