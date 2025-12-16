@@ -29,7 +29,7 @@ export default function InventoryModal({ isOpen, onClose, inventario }: Inventor
         const filtered = inventario.filter(item => {
             const prod = Array.isArray(item.Producto) ? item.Producto[0] : item.Producto;
             const nombre = prod?.Nombre?.toLowerCase() || "";
-            const marca = prod?.Marca?.toLowerCase() || "";
+            const marca = prod?.Marca?.NombreMarca?.toLowerCase() || "";
             return nombre.includes(term) || marca.includes(term);
         });
         setFilteredInventario(filtered);
@@ -98,7 +98,7 @@ export default function InventoryModal({ isOpen, onClose, inventario }: Inventor
                                             </td>
                                             <td className="px-6 py-4 text-slate-500 text-sm">
                                                 <span className="px-2 py-1 bg-slate-100 rounded text-xs font-semibold text-slate-600">
-                                                    {prod?.Marca ?? "-"}
+                                                    {prod?.Marca?.NombreMarca ?? "-"}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right">

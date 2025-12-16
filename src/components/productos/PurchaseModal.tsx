@@ -7,21 +7,26 @@ interface PurchaseModalProps {
     isOpen: boolean;
     onClose: () => void;
     product: any;
-    onBuy: (product: any, quantity: number) => Promise<void>;
+    onBuy: (product: any, quantity: number, idMetodoPago: number) => Promise<void>;
+    metodosPago?: any[];
 }
 
-export default function PurchaseModal({ isOpen, onClose, product, onBuy }: PurchaseModalProps) {
+export default function PurchaseModal({ isOpen, onClose, product, onBuy, metodosPago = [] }: PurchaseModalProps) {
     const [isBuying, setIsBuying] = useState(false);
     const [success, setSuccess] = useState(false);
     const [quantity, setQuantity] = useState<number | string>(1);
+    const [selectedMethod, setSelectedMethod] = useState<number | null>(null);
 
     useEffect(() => {
         if (isOpen) {
             setSuccess(false);
             setIsBuying(false);
             setQuantity(1);
+            if (metodosPago && metodosPago.length > 0) {
+                setSelectedMethod(metodosPago[0].IdMetodoPago);
+            }
         }
-    }, [isOpen]);
+    }, [isOpen, metodosPago]);
 
     if (!isOpen || !product) return null;
 
@@ -30,9 +35,13 @@ export default function PurchaseModal({ isOpen, onClose, product, onBuy }: Purch
         : product.Inventario?.Cantidad;
 
     const handleBuyClick = async () => {
+        if (!selectedMethod) {
+            alert("Por favor selecciona un método de pago");
+            return;
+        }
         setIsBuying(true);
         try {
-            await onBuy(product, Number(quantity) || 1);
+            await onBuy(product, Number(quantity) || 1, selectedMethod);
             setSuccess(true);
             setTimeout(() => {
                 onClose();
@@ -82,7 +91,7 @@ export default function PurchaseModal({ isOpen, onClose, product, onBuy }: Purch
                     {/* Product Info */}
                     <div className="text-center mb-8">
                         <span className="inline-block px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider mb-3">
-                            {product.Marca}
+                            {product.Marca?.NombreMarca}
                         </span>
                         <h2 className="text-2xl font-bold text-slate-900 mb-2 leading-tight">
                             {product.Nombre}
@@ -164,6 +173,29 @@ export default function PurchaseModal({ isOpen, onClose, product, onBuy }: Purch
                                 </div>
                             </div>
 
+
+
+                            <div className="mt-4">
+                                <span className="text-sm text-slate-600 font-semibold block mb-2">Método de Pago</span>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {metodosPago.map((metodo) => (
+                                        <button
+                                            key={metodo.IdMetodoPago}
+                                            onClick={() => setSelectedMethod(metodo.IdMetodoPago)}
+                                            className={`
+                                                px-3 py-2 rounded-xl text-sm font-bold border transition-all
+                                                ${selectedMethod === metodo.IdMetodoPago
+                                                    ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-sm'
+                                                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                                                }
+                                            `}
+                                        >
+                                            {metodo.Metodo}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
                             {/* Divider with Total */}
                             <div className="border-t border-slate-100 pt-4 flex justify-between items-end">
                                 <span className="text-sm font-medium text-slate-500">Total estimado</span>
@@ -225,6 +257,6 @@ export default function PurchaseModal({ isOpen, onClose, product, onBuy }: Purch
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

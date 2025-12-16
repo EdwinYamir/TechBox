@@ -19,6 +19,7 @@ export default function ProductosPage() {
     const [loading, setLoading] = useState(true);
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
     const [idCliente, setIdCliente] = useState<number | null>(null);
+    const [metodosPago, setMetodosPago] = useState<any[]>([]);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
     // =============================
@@ -31,8 +32,8 @@ export default function ProductosPage() {
         IdProducto,
         Nombre,
         Modelo,
-        Categoria,
-        Marca,
+        Categoria (NombreCategoria),
+        Marca (NombreMarca),
         PrecioVenta,
         Inventario (Cantidad)
       `);
@@ -40,6 +41,7 @@ export default function ProductosPage() {
         if (error) {
             console.error("Error cargando productos:", error.message);
         } else {
+            console.log("Productos loaded:", data); // Debugging log
             setProductos(data || []);
         }
     };
@@ -59,10 +61,15 @@ export default function ProductosPage() {
         }
     };
 
+    const fetchMetodosPago = async () => {
+        const { data } = await supabase.from("MetodoDePago").select("*");
+        setMetodosPago(data || []);
+    };
+
     useEffect(() => {
         const init = async () => {
             setLoading(true);
-            await Promise.all([fetchProductos(), fetchUser()]);
+            await Promise.all([fetchProductos(), fetchUser(), fetchMetodosPago()]);
             setLoading(false);
         };
         init();
@@ -71,7 +78,7 @@ export default function ProductosPage() {
     // =============================
     // Comprar producto (RPC)
     // =============================
-    const handleBuy = async (product: any, quantity: number) => {
+    const handleBuy = async (product: any, quantity: number, idMetodoPago: number) => {
         if (!product || quantity <= 0) return;
 
         if (!idCliente) {
@@ -86,7 +93,7 @@ export default function ProductosPage() {
             p_id_empleado: 6,       // Empleado por defecto o dinámico si aplica
             p_id_producto: product.IdProducto,
             p_cantidad: quantity,
-            p_metodo_pago: "Tarjeta",
+            p_metodo_pago: idMetodoPago, // Enviar como número (Int)
         });
 
         if (error) {
@@ -95,7 +102,7 @@ export default function ProductosPage() {
             if (error.message.includes("Stock")) {
                 alert("Stock insuficiente ❌");
             } else {
-                alert("Error al realizar la compra");
+                alert(`Error al realizar la compra: ${error.message}`);
             }
             return;
         }
@@ -131,6 +138,7 @@ export default function ProductosPage() {
                     onClose={() => setSelectedProduct(null)}
                     product={selectedProduct}
                     onBuy={handleBuy}
+                    metodosPago={metodosPago}
                 />
 
                 <AuthModal
@@ -163,9 +171,9 @@ export default function ProductosPage() {
                         <ProductCard
                             key={p.IdProducto}
                             nombre={p.Nombre}
-                            marca={p.Marca}
+                            marca={p.Marca?.NombreMarca || "General"}
                             modelo={p.Modelo}
-                            categoria={p.Categoria}
+                            categoria={p.Categoria?.NombreCategoria || "General"}
                             precio={p.PrecioVenta}
                             stock={
                                 (Array.isArray(p.Inventario)

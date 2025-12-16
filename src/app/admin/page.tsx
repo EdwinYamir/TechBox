@@ -73,7 +73,7 @@ export default function AdminDashboard() {
             // 5. Ventas recientes (últimas 5)
             const { data: ventas_r } = await supabase
                 .from("Venta")
-                .select("IdVenta, FechaVenta, TotalVenta")
+                .select("IdVenta, FechaVenta, TotalVenta, MetodoDePago(Metodo)")
                 .order("FechaVenta", { ascending: false })
                 .limit(5);
 
@@ -162,7 +162,9 @@ export default function AdminDashboard() {
                     Producto (
                         PrecioCosto,
                         Nombre,
-                        Marca
+                        Marca (
+                            NombreMarca
+                        )
                     )
                 `);
 
@@ -282,6 +284,7 @@ export default function AdminDashboard() {
                                                     <th className="px-6 py-4 font-semibold">ID Venta</th>
                                                     <th className="px-6 py-4 font-semibold">Fecha</th>
                                                     <th className="px-6 py-4 font-semibold text-right">Monto</th>
+                                                    <th className="px-6 py-4 font-semibold text-right">Metodo De Pago</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -293,6 +296,9 @@ export default function AdminDashboard() {
                                                         </td>
                                                         <td className="px-6 py-4 text-right font-bold text-slate-800">
                                                             ${Number(v.TotalVenta).toFixed(2)}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right font-bold text-slate-800">
+                                                            {v.MetodoDePago?.Metodo}
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -376,7 +382,7 @@ export default function AdminDashboard() {
                                                         <span className="text-xs font-bold text-red-800">
                                                             {prod?.Nombre ?? "Desc."}
                                                         </span>
-                                                        <span className="text-[10px] text-red-500 uppercase">{prod?.Marca}</span>
+                                                        <span className="text-[10px] text-red-500 uppercase">{prod?.Marca?.NombreMarca}</span>
                                                     </div>
                                                     <span className="bg-white text-red-600 px-2 py-1 rounded text-xs font-bold shadow-sm border border-red-100">
                                                         {Number(item.Cantidad)} u.
